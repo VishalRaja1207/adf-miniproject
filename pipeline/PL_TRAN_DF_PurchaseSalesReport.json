@@ -1,0 +1,53 @@
+{
+	"name": "PL_TRAN_DF_PurchaseSalesReport",
+	"properties": {
+		"description": "Create Inventory report",
+		"activities": [
+			{
+				"name": "ACT_MT_DF",
+				"description": "Create purchase order report and store in reporting schema",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "DF_TRAN_PurchaseAndSalesOrders",
+						"type": "DataFlowReference",
+						"datasetParameters": {
+							"PurchaseOrders": {
+								"schema_name": "prep",
+								"table_name": "purchase_orders"
+							},
+							"Orders": {
+								"schema_name": "prep",
+								"table_name": "orders"
+							},
+							"PurchaseReport": {
+								"schema_name": "reporting",
+								"table_name": "purchase_report"
+							}
+						}
+					},
+					"compute": {
+						"coreCount": 8,
+						"computeType": "General"
+					},
+					"traceLevel": "Fine"
+				}
+			}
+		],
+		"folder": {
+			"name": "Task 1"
+		},
+		"annotations": [],
+		"lastPublishTime": "2024-08-28T15:20:28Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

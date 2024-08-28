@@ -1,0 +1,79 @@
+{
+	"name": "PL_ETL_Inventory",
+	"properties": {
+		"description": "ETL Pipeline for Inventory Data",
+		"activities": [
+			{
+				"name": "ACT_GEN_EPIPE_InventoryCopy",
+				"description": "Copy Inventory Data from mongodb to sqldb",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_COPY_DATA_MONG_Inventory_TO_DATE_SQL",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			},
+			{
+				"name": "ACT_GEN_EPIPE_InventoryClean",
+				"description": "Clean Inventory data",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "ACT_GEN_EPIPE_InventoryCopy",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_TRAN_DF_InventoryClean",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			},
+			{
+				"name": "ACT_GEN_EPIPE_InventoryReport",
+				"description": "Create Inventory report",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "ACT_GEN_EPIPE_InventoryClean",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_TRAN_DF_PurchaseSalesReport",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			}
+		],
+		"folder": {
+			"name": "Task 1"
+		},
+		"annotations": [],
+		"lastPublishTime": "2024-08-28T15:20:31Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

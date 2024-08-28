@@ -1,0 +1,116 @@
+{
+	"name": "DF_TRAN_PurchaseAndSalesOrders",
+	"properties": {
+		"folder": {
+			"name": "Task 1"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "DS_SQL_Inventory",
+						"type": "DatasetReference"
+					},
+					"name": "PurchaseOrders",
+					"description": "Import data from Purchase Orders"
+				},
+				{
+					"dataset": {
+						"referenceName": "DS_SQL_Inventory",
+						"type": "DatasetReference"
+					},
+					"name": "Orders",
+					"description": "Import data from Orders"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "DS_SQL_Inventory",
+						"type": "DatasetReference"
+					},
+					"name": "PurchaseReport",
+					"description": "Sink report to reporting schema"
+				}
+			],
+			"transformations": [
+				{
+					"name": "PurchaseOrdersJoin",
+					"description": "Inner join on 'PurchaseSelect' and 'Orders'\nusing order_id in purchase and orders"
+				},
+				{
+					"name": "TotalPurchases",
+					"description": "Finding total purchase sales and quantities"
+				},
+				{
+					"name": "PurchaseSelect",
+					"description": "Select required columns"
+				},
+				{
+					"name": "PurchaseReportSelect",
+					"description": "Select required columns"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          id as string,",
+				"          vendor_id as string,",
+				"          order_id as string,",
+				"          order_date as date,",
+				"          delivery_date as date,",
+				"          status as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> PurchaseOrders",
+				"source(output(",
+				"          id as string,",
+				"          item_id as string,",
+				"          price as long,",
+				"          quantity as long",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> Orders",
+				"PurchaseSelect, Orders join(order_id == id,",
+				"     joinType:'inner',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> PurchaseOrdersJoin",
+				"PurchaseOrdersJoin window(over(item_id),",
+				"     total_purchase_price_per_item = sum(price),",
+				"          total_purchase_quantity_per_item = sum(quantity)) ~> TotalPurchases",
+				"PurchaseOrders select(mapColumn(",
+				"          purchase_id = id,",
+				"          vendor_id,",
+				"          order_id",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> PurchaseSelect",
+				"TotalPurchases select(mapColumn(",
+				"          item_id,",
+				"          vendor_id,",
+				"          order_id,",
+				"          total_purchase_price_per_vendor = total_purchase_price_per_item,",
+				"          total_purchase_quantity_per_vendor = total_purchase_quantity_per_item",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> PurchaseReportSelect",
+				"PurchaseReportSelect sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     recreate:true,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> PurchaseReport"
+			]
+		}
+	}
+}

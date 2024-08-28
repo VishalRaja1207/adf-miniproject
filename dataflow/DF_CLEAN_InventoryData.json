@@ -1,0 +1,250 @@
+{
+	"name": "DF_CLEAN_InventoryData",
+	"properties": {
+		"folder": {
+			"name": "Task 1"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "DS_SQL_Inventory",
+						"type": "DatasetReference"
+					},
+					"name": "PurchaseOrdersSource"
+				},
+				{
+					"dataset": {
+						"referenceName": "DS_SQL_Inventory",
+						"type": "DatasetReference"
+					},
+					"name": "SalesOrderSource"
+				},
+				{
+					"dataset": {
+						"referenceName": "DS_SQL_Inventory",
+						"type": "DatasetReference"
+					},
+					"name": "VendorsSource"
+				},
+				{
+					"dataset": {
+						"referenceName": "DS_SQL_Inventory",
+						"type": "DatasetReference"
+					},
+					"name": "CustomerSource"
+				},
+				{
+					"dataset": {
+						"referenceName": "DS_SQL_Inventory",
+						"type": "DatasetReference"
+					},
+					"name": "ItemsSource"
+				},
+				{
+					"dataset": {
+						"referenceName": "DS_SQL_Inventory",
+						"type": "DatasetReference"
+					},
+					"name": "OrdersSource"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "DS_SQL_Inventory",
+						"type": "DatasetReference"
+					},
+					"name": "PurchaseOrdersSink"
+				},
+				{
+					"dataset": {
+						"referenceName": "DS_SQL_Inventory",
+						"type": "DatasetReference"
+					},
+					"name": "SalesOrdersSink"
+				},
+				{
+					"dataset": {
+						"referenceName": "DS_SQL_Inventory",
+						"type": "DatasetReference"
+					},
+					"name": "VendorsSink"
+				},
+				{
+					"dataset": {
+						"referenceName": "DS_SQL_Inventory",
+						"type": "DatasetReference"
+					},
+					"name": "CustomerSink"
+				},
+				{
+					"dataset": {
+						"referenceName": "DS_SQL_Inventory",
+						"type": "DatasetReference"
+					},
+					"name": "ItemsSink"
+				},
+				{
+					"dataset": {
+						"referenceName": "DS_SQL_Inventory",
+						"type": "DatasetReference"
+					},
+					"name": "OrdersSink"
+				}
+			],
+			"transformations": [
+				{
+					"name": "CleanPurchase"
+				},
+				{
+					"name": "CleanSales"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          id as string,",
+				"          vendor_id as string,",
+				"          order_id as string,",
+				"          order_date as string,",
+				"          delivery_date as string,",
+				"          status as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> PurchaseOrdersSource",
+				"source(output(",
+				"          id as string,",
+				"          customer_id as string,",
+				"          order_id as string,",
+				"          order_date as string,",
+				"          delivery_date as string,",
+				"          status as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> SalesOrderSource",
+				"source(output(",
+				"          id as string,",
+				"          name as string,",
+				"          contact_person as string,",
+				"          phone as string,",
+				"          email as string,",
+				"          address as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> VendorsSource",
+				"source(output(",
+				"          id as string,",
+				"          name as string,",
+				"          email as string,",
+				"          phone as string,",
+				"          address as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> CustomerSource",
+				"source(output(",
+				"          id as string,",
+				"          name as string,",
+				"          description as string,",
+				"          category as string,",
+				"          cost_price as double,",
+				"          selling_price as double,",
+				"          quantity as long,",
+				"          vendor_id as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> ItemsSource",
+				"source(output(",
+				"          id as string,",
+				"          item_id as string,",
+				"          price as long,",
+				"          quantity as long",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> OrdersSource",
+				"PurchaseOrdersSource derive(order_date = toDate(toTimestamp(toInteger(toLong(order_date) / toLong(1000))*1000l)),",
+				"          delivery_date = toDate(toTimestamp(toInteger(toLong(delivery_date) / toLong(1000))*1000l))) ~> CleanPurchase",
+				"SalesOrderSource derive(order_date = toDate(toTimestamp(toInteger(toLong(order_date) / toLong(1000))*1000l)),",
+				"          delivery_date = toDate(toTimestamp(toInteger(toLong(delivery_date) / toLong(1000))*1000l))) ~> CleanSales",
+				"CleanPurchase sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     recreate:true,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> PurchaseOrdersSink",
+				"CleanSales sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     recreate:true,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> SalesOrdersSink",
+				"VendorsSource sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     recreate:true,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> VendorsSink",
+				"CustomerSource sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     recreate:true,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> CustomerSink",
+				"ItemsSource sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     recreate:true,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> ItemsSink",
+				"OrdersSource sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     recreate:true,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> OrdersSink"
+			]
+		}
+	}
+}

@@ -1,0 +1,688 @@
+{
+	"name": "PL_COPY_DATA_MONG_Inventory_TO_DATE_SQL",
+	"properties": {
+		"description": "Copy Inventory data from mongodb to sql",
+		"activities": [
+			{
+				"name": "ACT_MT_Copy_Vendors",
+				"description": "Copy Vendors from mongodb to sqldb ",
+				"type": "Copy",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "MongoDbAtlasSource",
+						"batchSize": 100
+					},
+					"sink": {
+						"type": "AzureSqlSink",
+						"preCopyScript": "DROP TABLE IF EXISTS raw.vendors",
+						"writeBehavior": "insert",
+						"sqlWriterUseTableLock": false,
+						"tableOption": "autoCreate",
+						"disableMetricsCollection": false
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"mappings": [
+							{
+								"source": {
+									"path": "$['_id']['$oid']"
+								},
+								"sink": {
+									"name": "id",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "$['name']"
+								},
+								"sink": {
+									"name": "name",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "$['contact_person']"
+								},
+								"sink": {
+									"name": "contact_person",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "$['phone']"
+								},
+								"sink": {
+									"name": "phone",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "$['email']"
+								},
+								"sink": {
+									"name": "email",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "$['address']"
+								},
+								"sink": {
+									"name": "address",
+									"type": "String"
+								}
+							}
+						],
+						"mapComplexValuesToString": true
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "DS_MONG_Inventory",
+						"type": "DatasetReference",
+						"parameters": {
+							"collection_name": "vendors"
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "DS_SQL_Inventory",
+						"type": "DatasetReference",
+						"parameters": {
+							"schema_name": "raw",
+							"table_name": "vendors"
+						}
+					}
+				]
+			},
+			{
+				"name": "ACT_MT_Copy_Customers",
+				"description": "Copy Customers from mongodb to sqldb ",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "ACT_MT_Copy_Vendors",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "MongoDbAtlasSource",
+						"batchSize": 100
+					},
+					"sink": {
+						"type": "AzureSqlSink",
+						"preCopyScript": "DROP TABLE IF EXISTS raw.customers",
+						"writeBehavior": "insert",
+						"sqlWriterUseTableLock": false,
+						"tableOption": "autoCreate",
+						"disableMetricsCollection": false
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"mappings": [
+							{
+								"source": {
+									"path": "$['_id']['$oid']"
+								},
+								"sink": {
+									"name": "id",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "$['name']"
+								},
+								"sink": {
+									"name": "name",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "$['email']"
+								},
+								"sink": {
+									"name": "email",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "$['phone']"
+								},
+								"sink": {
+									"name": "phone",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "$['address']"
+								},
+								"sink": {
+									"name": "address",
+									"type": "String"
+								}
+							}
+						],
+						"mapComplexValuesToString": true
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "DS_MONG_Inventory",
+						"type": "DatasetReference",
+						"parameters": {
+							"collection_name": "customers"
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "DS_SQL_Inventory",
+						"type": "DatasetReference",
+						"parameters": {
+							"schema_name": "raw",
+							"table_name": "customers"
+						}
+					}
+				]
+			},
+			{
+				"name": "ACT_MT_Copy_Items",
+				"description": "Copy Items from mongodb to sqldb ",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "ACT_MT_Copy_Customers",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "MongoDbAtlasSource",
+						"batchSize": 100
+					},
+					"sink": {
+						"type": "AzureSqlSink",
+						"preCopyScript": "DROP TABLE IF EXISTS raw.items",
+						"writeBehavior": "insert",
+						"sqlWriterUseTableLock": false,
+						"tableOption": "autoCreate",
+						"disableMetricsCollection": false
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"mappings": [
+							{
+								"source": {
+									"path": "$['_id']['$oid']"
+								},
+								"sink": {
+									"name": "id",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "$['name']"
+								},
+								"sink": {
+									"name": "name",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "$['description']"
+								},
+								"sink": {
+									"name": "description",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "$['category']"
+								},
+								"sink": {
+									"name": "category",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "$['cost_price']['$numberInt']"
+								},
+								"sink": {
+									"name": "cost_price",
+									"type": "Double"
+								}
+							},
+							{
+								"source": {
+									"path": "$['selling_price']['$numberInt']"
+								},
+								"sink": {
+									"name": "selling_price",
+									"type": "Double"
+								}
+							},
+							{
+								"source": {
+									"path": "$['quantity']['$numberInt']"
+								},
+								"sink": {
+									"name": "quantity",
+									"type": "Int64"
+								}
+							},
+							{
+								"source": {
+									"path": "$['vendor_id']['$oid']"
+								},
+								"sink": {
+									"name": "vendor_id",
+									"type": "String"
+								}
+							}
+						],
+						"mapComplexValuesToString": true
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "DS_MONG_Inventory",
+						"type": "DatasetReference",
+						"parameters": {
+							"collection_name": "items"
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "DS_SQL_Inventory",
+						"type": "DatasetReference",
+						"parameters": {
+							"schema_name": "raw",
+							"table_name": "items"
+						}
+					}
+				]
+			},
+			{
+				"name": "ACT_MT_Copy_Orders",
+				"description": "Copy Orders from mongodb to sqldb ",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "ACT_MT_Copy_Items",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "MongoDbAtlasSource",
+						"batchSize": 100
+					},
+					"sink": {
+						"type": "AzureSqlSink",
+						"preCopyScript": "DROP TABLE IF EXISTS raw.orders",
+						"writeBehavior": "insert",
+						"sqlWriterUseTableLock": false,
+						"tableOption": "autoCreate",
+						"disableMetricsCollection": false
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"mappings": [
+							{
+								"source": {
+									"path": "$['_id']['$oid']"
+								},
+								"sink": {
+									"name": "id",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "$['item_id']['$oid']"
+								},
+								"sink": {
+									"name": "item_id",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "$['price']['$numberInt']"
+								},
+								"sink": {
+									"name": "price",
+									"type": "Int64"
+								}
+							},
+							{
+								"source": {
+									"path": "$['quantity']['$numberInt']"
+								},
+								"sink": {
+									"name": "quantity",
+									"type": "Int64"
+								}
+							}
+						],
+						"mapComplexValuesToString": true
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "DS_MONG_Inventory",
+						"type": "DatasetReference",
+						"parameters": {
+							"collection_name": "orders"
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "DS_SQL_Inventory",
+						"type": "DatasetReference",
+						"parameters": {
+							"schema_name": "raw",
+							"table_name": "orders"
+						}
+					}
+				]
+			},
+			{
+				"name": "ACT_MT_Copy_PurchaseOrders",
+				"description": "Copy PurchaseOrders from mongodb to sqldb ",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "ACT_MT_Copy_Orders",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "MongoDbAtlasSource",
+						"batchSize": 100
+					},
+					"sink": {
+						"type": "AzureSqlSink",
+						"preCopyScript": "DROP TABLE IF EXISTS raw.prchase_orders",
+						"writeBehavior": "insert",
+						"sqlWriterUseTableLock": false,
+						"tableOption": "autoCreate",
+						"disableMetricsCollection": false
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"mappings": [
+							{
+								"source": {
+									"path": "$['_id']['$oid']"
+								},
+								"sink": {
+									"name": "id",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "$['vendor_id']['$oid']"
+								},
+								"sink": {
+									"name": "vendor_id",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "$['order_id']['$oid']"
+								},
+								"sink": {
+									"name": "order_id",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "$['order_date']['$date']['$numberLong']"
+								},
+								"sink": {
+									"name": "order_date",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "$['delivery_date']['$date']['$numberLong']"
+								},
+								"sink": {
+									"name": "delivery_date",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "$['status']"
+								},
+								"sink": {
+									"name": "status",
+									"type": "String"
+								}
+							}
+						],
+						"mapComplexValuesToString": true
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "DS_MONG_Inventory",
+						"type": "DatasetReference",
+						"parameters": {
+							"collection_name": "purchaseorders"
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "DS_SQL_Inventory",
+						"type": "DatasetReference",
+						"parameters": {
+							"schema_name": "raw",
+							"table_name": "purchase_orders"
+						}
+					}
+				]
+			},
+			{
+				"name": "ACT_MT_Copy_SalesOrders",
+				"description": "Copy SalesOrders from mongodb to sqldb ",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "ACT_MT_Copy_PurchaseOrders",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "MongoDbAtlasSource",
+						"batchSize": 100
+					},
+					"sink": {
+						"type": "AzureSqlSink",
+						"preCopyScript": "DROP TABLE IF EXISTS raw.sales_orders",
+						"writeBehavior": "insert",
+						"sqlWriterUseTableLock": false,
+						"tableOption": "autoCreate",
+						"disableMetricsCollection": false
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"mappings": [
+							{
+								"source": {
+									"path": "$['_id']['$oid']"
+								},
+								"sink": {
+									"name": "id",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "$['customer_id']['$oid']"
+								},
+								"sink": {
+									"name": "customer_id",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "$['order_id']['$oid']"
+								},
+								"sink": {
+									"name": "order_id",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "$['order_date']['$date']['$numberLong']"
+								},
+								"sink": {
+									"name": "order_date",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "$['delivery_date']['$date']['$numberLong']"
+								},
+								"sink": {
+									"name": "delivery_date",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "$['status']"
+								},
+								"sink": {
+									"name": "status",
+									"type": "String"
+								}
+							}
+						],
+						"mapComplexValuesToString": true
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "DS_MONG_Inventory",
+						"type": "DatasetReference",
+						"parameters": {
+							"collection_name": "salesorders"
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "DS_SQL_Inventory",
+						"type": "DatasetReference",
+						"parameters": {
+							"schema_name": "raw",
+							"table_name": "sales_orders"
+						}
+					}
+				]
+			}
+		],
+		"folder": {
+			"name": "Task 1"
+		},
+		"annotations": [],
+		"lastPublishTime": "2024-08-28T15:20:28Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

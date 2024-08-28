@@ -1,0 +1,27 @@
+{
+	"name": "DS_MONG_Inventory",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_MONG_Inventory",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"collection_name": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "Task 1"
+		},
+		"annotations": [],
+		"type": "MongoDbAtlasCollection",
+		"schema": [],
+		"typeProperties": {
+			"collection": {
+				"value": "@dataset().collection_name",
+				"type": "Expression"
+			}
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

@@ -15,7 +15,15 @@
 					"name": "source1"
 				}
 			],
-			"sinks": [],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "DS_SQL_Inventory",
+						"type": "DatasetReference"
+					},
+					"name": "sink1"
+				}
+			],
 			"transformations": [
 				{
 					"name": "derivedColumn1"
@@ -40,7 +48,17 @@
 				"     validateSchema: false,",
 				"     ignoreNoFilesFound: false) ~> source1",
 				"source1 derive(min_standard_unit_price = iifNull(min_standard_unit_price, 0, min_standard_unit_price),",
-				"          max_standard_unit_price = iifNull(max_standard_unit_price, 0, max_standard_unit_price)) ~> derivedColumn1"
+				"          max_standard_unit_price = iifNull(max_standard_unit_price, 0, max_standard_unit_price)) ~> derivedColumn1",
+				"derivedColumn1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> sink1"
 			]
 		}
 	}

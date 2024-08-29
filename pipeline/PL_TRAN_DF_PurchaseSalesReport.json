@@ -29,9 +29,25 @@
 								"schema_name": "prep",
 								"table_name": "orders"
 							},
+							"SalesOrders": {
+								"schema_name": "prep",
+								"table_name": "sales_orders"
+							},
 							"PurchaseReport": {
 								"schema_name": "reporting",
 								"table_name": "purchase_report"
+							},
+							"SalesReport": {
+								"schema_name": "reporting",
+								"table_name": "sales_report"
+							}
+						},
+						"linkedServiceParameters": {
+							"SalesReport": {
+								"schemaLinkedService": {
+									"schema_name": "reporting",
+									"table_name": "sales_report"
+								}
 							}
 						}
 					},

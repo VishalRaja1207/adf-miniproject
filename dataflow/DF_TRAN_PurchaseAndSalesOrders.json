@@ -22,6 +22,13 @@
 					},
 					"name": "Orders",
 					"description": "Import data from Orders"
+				},
+				{
+					"dataset": {
+						"referenceName": "DS_SQL_Inventory",
+						"type": "DatasetReference"
+					},
+					"name": "SalesOrders"
 				}
 			],
 			"sinks": [
@@ -32,6 +39,13 @@
 					},
 					"name": "PurchaseReport",
 					"description": "Sink report to reporting schema"
+				},
+				{
+					"dataset": {
+						"referenceName": "DS_SQL_Inventory",
+						"type": "DatasetReference"
+					},
+					"name": "SalesReport"
 				}
 			],
 			"transformations": [
@@ -49,6 +63,21 @@
 				},
 				{
 					"name": "PurchaseReportSelect",
+					"description": "Select required columns"
+				},
+				{
+					"name": "select1"
+				},
+				{
+					"name": "SalesOrderJoin",
+					"description": "Inner join on 'PurchaseSelect' and 'Orders'\nusing order_id in purchase and orders"
+				},
+				{
+					"name": "TotalSales",
+					"description": "Finding total sales and quantities"
+				},
+				{
+					"name": "SalesReportSelect",
 					"description": "Select required columns"
 				}
 			],
@@ -75,6 +104,18 @@
 				"     validateSchema: false,",
 				"     isolationLevel: 'READ_UNCOMMITTED',",
 				"     format: 'table') ~> Orders",
+				"source(output(",
+				"          id as string,",
+				"          customer_id as string,",
+				"          order_id as string,",
+				"          order_date as date,",
+				"          delivery_date as date,",
+				"          status as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> SalesOrders",
 				"PurchaseSelect, Orders join(order_id == id,",
 				"     joinType:'inner',",
 				"     matchType:'exact',",
@@ -99,6 +140,30 @@
 				"     ),",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true) ~> PurchaseReportSelect",
+				"SalesOrders select(mapColumn(",
+				"          id,",
+				"          customer_id,",
+				"          order_id",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> select1",
+				"select1, Orders join(order_id == Orders@id,",
+				"     joinType:'inner',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> SalesOrderJoin",
+				"SalesOrderJoin window(over(item_id),",
+				"     total_sales_price_per_item = sum(price),",
+				"          total_sales_quantity_per_item = sum(quantity)) ~> TotalSales",
+				"TotalSales select(mapColumn(",
+				"          item_id,",
+				"          order_id,",
+				"          customer_id,",
+				"          total_sales_price_per_item,",
+				"          total_sales_quantity_per_item",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> SalesReportSelect",
 				"PurchaseReportSelect sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     deletable:false,",
@@ -109,7 +174,17 @@
 				"     format: 'table',",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true,",
-				"     errorHandlingOption: 'stopOnFirstError') ~> PurchaseReport"
+				"     errorHandlingOption: 'stopOnFirstError') ~> PurchaseReport",
+				"SalesReportSelect sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> SalesReport"
 			]
 		}
 	}

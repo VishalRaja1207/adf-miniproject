@@ -1,0 +1,75 @@
+{
+	"name": "DelimitedText1",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_ABLB_Misumi",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "Task 2"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"fileName": "products_data.csv",
+				"container": "misumi"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": [
+			{
+				"name": "products",
+				"type": "String"
+			},
+			{
+				"name": "categories",
+				"type": "String"
+			},
+			{
+				"name": "sub_categories",
+				"type": "String"
+			},
+			{
+				"name": "department_code",
+				"type": "String"
+			},
+			{
+				"name": "category_code",
+				"type": "String"
+			},
+			{
+				"name": "category_name",
+				"type": "String"
+			},
+			{
+				"name": "brand_code",
+				"type": "String"
+			},
+			{
+				"name": "series_name",
+				"type": "String"
+			},
+			{
+				"name": "min_standard_unit_price",
+				"type": "String"
+			},
+			{
+				"name": "max_standard_unit_price",
+				"type": "String"
+			},
+			{
+				"name": "min_days_to_ship",
+				"type": "String"
+			},
+			{
+				"name": "max_days_to_ship",
+				"type": "String"
+			}
+		]
+	}
+}

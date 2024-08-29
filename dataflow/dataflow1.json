@@ -1,0 +1,47 @@
+{
+	"name": "dataflow1",
+	"properties": {
+		"folder": {
+			"name": "Task 2"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "DelimitedText1",
+						"type": "DatasetReference"
+					},
+					"name": "source1"
+				}
+			],
+			"sinks": [],
+			"transformations": [
+				{
+					"name": "derivedColumn1"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          products as string,",
+				"          categories as string,",
+				"          sub_categories as string,",
+				"          department_code as string,",
+				"          category_code as string,",
+				"          category_name as string,",
+				"          brand_code as string,",
+				"          series_name as string,",
+				"          min_standard_unit_price as double,",
+				"          max_standard_unit_price as double,",
+				"          min_days_to_ship as integer,",
+				"          max_days_to_ship as integer",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> source1",
+				"source1 derive(min_standard_unit_price = iifNull(min_standard_unit_price, 0, min_standard_unit_price),",
+				"          max_standard_unit_price = iifNull(max_standard_unit_price, 0, max_standard_unit_price)) ~> derivedColumn1"
+			]
+		}
+	}
+}

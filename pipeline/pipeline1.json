@@ -5,8 +5,6 @@
 			{
 				"name": "Data flow1",
 				"type": "ExecuteDataFlow",
-				"state": "Inactive",
-				"onInactiveMarkAs": "Succeeded",
 				"dependsOn": [],
 				"policy": {
 					"timeout": "0.12:00:00",
@@ -21,9 +19,21 @@
 						"referenceName": "dataflow1",
 						"type": "DataFlowReference",
 						"datasetParameters": {
+							"ProductsSource": {
+								"schema_name": "raw",
+								"table_name": "products"
+							},
 							"ProductsSink": {
 								"schema_name": "prep",
 								"table_name": "test"
+							}
+						},
+						"linkedServiceParameters": {
+							"ProductsSource": {
+								"schemaLinkedService": {
+									"schema_name": "prep",
+									"table_name": "products"
+								}
 							}
 						}
 					},
@@ -37,6 +47,8 @@
 			{
 				"name": "Copy data1",
 				"type": "Copy",
+				"state": "Inactive",
+				"onInactiveMarkAs": "Succeeded",
 				"dependsOn": [],
 				"policy": {
 					"timeout": "0.12:00:00",

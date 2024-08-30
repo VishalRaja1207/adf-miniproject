@@ -26,7 +26,8 @@
 			],
 			"transformations": [
 				{
-					"name": "derivedColumn1"
+					"name": "ProductClean",
+					"description": "Clean min and max prices"
 				}
 			],
 			"scriptLines": [
@@ -39,18 +40,18 @@
 				"          category_name as string,",
 				"          brand_code as string,",
 				"          series_name as string,",
-				"          min_standard_unit_price as string,",
-				"          max_standard_unit_price as string,",
-				"          min_days_to_ship as string,",
-				"          max_days_to_ship as string",
+				"          min_standard_unit_price as double,",
+				"          max_standard_unit_price as double,",
+				"          min_days_to_ship as integer,",
+				"          max_days_to_ship as integer",
 				"     ),",
 				"     allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     isolationLevel: 'READ_UNCOMMITTED',",
 				"     format: 'table') ~> ProductsSource",
 				"ProductsSource derive(min_standard_unit_price = iifNull(min_standard_unit_price, 0, min_standard_unit_price),",
-				"          max_standard_unit_price = iifNull(max_standard_unit_price, 0, max_standard_unit_price)) ~> derivedColumn1",
-				"derivedColumn1 sink(allowSchemaDrift: true,",
+				"          max_standard_unit_price = iifNull(max_standard_unit_price, 0, max_standard_unit_price)) ~> ProductClean",
+				"ProductClean sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     deletable:false,",
 				"     insertable:true,",

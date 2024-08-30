@@ -1,0 +1,17 @@
+{
+	"name": "LS_SQL_Misumi",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"annotations": [],
+		"type": "AzureSqlDatabase",
+		"typeProperties": {
+			"server": "sqlserverminiproject.database.windows.net",
+			"database": "sql-misumi-dev",
+			"encrypt": "mandatory",
+			"trustServerCertificate": false,
+			"authenticationType": "SQL",
+			"userName": "vishal",
+			"encryptedCredential": "ew0KICAiVmVyc2lvbiI6ICIyMDE3LTExLTMwIiwNCiAgIlByb3RlY3Rpb25Nb2RlIjogIktleSIsDQogICJTZWNyZXRDb250ZW50VHlwZSI6ICJQbGFpbnRleHQiLA0KICAiQ3JlZGVudGlhbElkIjogIkRBVEFGQUNUT1JZQDU3MkI0MTUxLUU3RjItNDlCRC1BRTJCLUYxRTY0NzM5MDcyM180OWMyODEwNC03ZmU4LTQ3OTItYTI0OC05MWRjZjg4YmIwYjciDQp9"
+		}
+	}
+}

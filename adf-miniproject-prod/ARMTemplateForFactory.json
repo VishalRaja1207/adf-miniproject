@@ -1,0 +1,2283 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "adf-miniproject-prod"
+		},
+		"LS_ABLB_Misumi_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'LS_ABLB_Misumi'"
+		},
+		"LS_MONG_Inventory_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'LS_MONG_Inventory'"
+		},
+		"LS_SQL_Inventory_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'LS_SQL_Inventory'"
+		},
+		"LS_SQL_Misumi_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'LS_SQL_Misumi'"
+		},
+		"LS_MONG_Inventory_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "Inventory"
+		},
+		"LS_SQL_Inventory_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "sqlserverminiproject.database.windows.net"
+		},
+		"LS_SQL_Inventory_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "sql-Inventory-dev"
+		},
+		"LS_SQL_Inventory_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "vishal"
+		},
+		"LS_SQL_Misumi_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "sqlserverminiproject.database.windows.net"
+		},
+		"LS_SQL_Misumi_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "sql-misumi-dev"
+		},
+		"LS_SQL_Misumi_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "vishal"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_COPY_DATA_MONG_Inventory_TO_DATE_SQL')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "Copy Inventory data from mongodb to sql",
+				"activities": [
+					{
+						"name": "ACT_MT_Copy_Vendors",
+						"description": "Copy Vendors from mongodb to sqldb ",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "MongoDbAtlasSource",
+								"batchSize": 100
+							},
+							"sink": {
+								"type": "AzureSqlSink",
+								"preCopyScript": "DROP TABLE IF EXISTS raw.vendors",
+								"writeBehavior": "insert",
+								"sqlWriterUseTableLock": false,
+								"tableOption": "autoCreate",
+								"disableMetricsCollection": false
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"mappings": [
+									{
+										"source": {
+											"path": "$['_id']['$oid']"
+										},
+										"sink": {
+											"name": "id",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"path": "$['name']"
+										},
+										"sink": {
+											"name": "name",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"path": "$['contact_person']"
+										},
+										"sink": {
+											"name": "contact_person",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"path": "$['phone']"
+										},
+										"sink": {
+											"name": "phone",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"path": "$['email']"
+										},
+										"sink": {
+											"name": "email",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"path": "$['address']"
+										},
+										"sink": {
+											"name": "address",
+											"type": "String"
+										}
+									}
+								],
+								"mapComplexValuesToString": true
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "DS_MONG_Inventory",
+								"type": "DatasetReference",
+								"parameters": {
+									"collection_name": "vendors"
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "DS_SQL_Inventory",
+								"type": "DatasetReference",
+								"parameters": {
+									"schema_name": "raw",
+									"table_name": "vendors"
+								}
+							}
+						]
+					},
+					{
+						"name": "ACT_MT_Copy_Customers",
+						"description": "Copy Customers from mongodb to sqldb ",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "ACT_MT_Copy_Vendors",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "MongoDbAtlasSource",
+								"batchSize": 100
+							},
+							"sink": {
+								"type": "AzureSqlSink",
+								"preCopyScript": "DROP TABLE IF EXISTS raw.customers",
+								"writeBehavior": "insert",
+								"sqlWriterUseTableLock": false,
+								"tableOption": "autoCreate",
+								"disableMetricsCollection": false
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"mappings": [
+									{
+										"source": {
+											"path": "$['_id']['$oid']"
+										},
+										"sink": {
+											"name": "id",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"path": "$['name']"
+										},
+										"sink": {
+											"name": "name",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"path": "$['email']"
+										},
+										"sink": {
+											"name": "email",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"path": "$['phone']"
+										},
+										"sink": {
+											"name": "phone",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"path": "$['address']"
+										},
+										"sink": {
+											"name": "address",
+											"type": "String"
+										}
+									}
+								],
+								"mapComplexValuesToString": true
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "DS_MONG_Inventory",
+								"type": "DatasetReference",
+								"parameters": {
+									"collection_name": "customers"
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "DS_SQL_Inventory",
+								"type": "DatasetReference",
+								"parameters": {
+									"schema_name": "raw",
+									"table_name": "customers"
+								}
+							}
+						]
+					},
+					{
+						"name": "ACT_MT_Copy_Items",
+						"description": "Copy Items from mongodb to sqldb ",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "ACT_MT_Copy_Customers",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "MongoDbAtlasSource",
+								"batchSize": 100
+							},
+							"sink": {
+								"type": "AzureSqlSink",
+								"preCopyScript": "DROP TABLE IF EXISTS raw.items",
+								"writeBehavior": "insert",
+								"sqlWriterUseTableLock": false,
+								"tableOption": "autoCreate",
+								"disableMetricsCollection": false
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"mappings": [
+									{
+										"source": {
+											"path": "$['_id']['$oid']"
+										},
+										"sink": {
+											"name": "id",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"path": "$['name']"
+										},
+										"sink": {
+											"name": "name",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"path": "$['description']"
+										},
+										"sink": {
+											"name": "description",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"path": "$['category']"
+										},
+										"sink": {
+											"name": "category",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"path": "$['cost_price']['$numberInt']"
+										},
+										"sink": {
+											"name": "cost_price",
+											"type": "Double"
+										}
+									},
+									{
+										"source": {
+											"path": "$['selling_price']['$numberInt']"
+										},
+										"sink": {
+											"name": "selling_price",
+											"type": "Double"
+										}
+									},
+									{
+										"source": {
+											"path": "$['quantity']['$numberInt']"
+										},
+										"sink": {
+											"name": "quantity",
+											"type": "Int64"
+										}
+									},
+									{
+										"source": {
+											"path": "$['vendor_id']['$oid']"
+										},
+										"sink": {
+											"name": "vendor_id",
+											"type": "String"
+										}
+									}
+								],
+								"mapComplexValuesToString": true
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "DS_MONG_Inventory",
+								"type": "DatasetReference",
+								"parameters": {
+									"collection_name": "items"
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "DS_SQL_Inventory",
+								"type": "DatasetReference",
+								"parameters": {
+									"schema_name": "raw",
+									"table_name": "items"
+								}
+							}
+						]
+					},
+					{
+						"name": "ACT_MT_Copy_Orders",
+						"description": "Copy Orders from mongodb to sqldb ",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "ACT_MT_Copy_Items",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "MongoDbAtlasSource",
+								"batchSize": 100
+							},
+							"sink": {
+								"type": "AzureSqlSink",
+								"preCopyScript": "DROP TABLE IF EXISTS raw.orders",
+								"writeBehavior": "insert",
+								"sqlWriterUseTableLock": false,
+								"tableOption": "autoCreate",
+								"disableMetricsCollection": false
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"mappings": [
+									{
+										"source": {
+											"path": "$['_id']['$oid']"
+										},
+										"sink": {
+											"name": "id",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"path": "$['item_id']['$oid']"
+										},
+										"sink": {
+											"name": "item_id",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"path": "$['price']['$numberInt']"
+										},
+										"sink": {
+											"name": "price",
+											"type": "Int64"
+										}
+									},
+									{
+										"source": {
+											"path": "$['quantity']['$numberInt']"
+										},
+										"sink": {
+											"name": "quantity",
+											"type": "Int64"
+										}
+									}
+								],
+								"mapComplexValuesToString": true
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "DS_MONG_Inventory",
+								"type": "DatasetReference",
+								"parameters": {
+									"collection_name": "orders"
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "DS_SQL_Inventory",
+								"type": "DatasetReference",
+								"parameters": {
+									"schema_name": "raw",
+									"table_name": "orders"
+								}
+							}
+						]
+					},
+					{
+						"name": "ACT_MT_Copy_PurchaseOrders",
+						"description": "Copy PurchaseOrders from mongodb to sqldb ",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "ACT_MT_Copy_Orders",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "MongoDbAtlasSource",
+								"batchSize": 100
+							},
+							"sink": {
+								"type": "AzureSqlSink",
+								"preCopyScript": "DROP TABLE IF EXISTS raw.prchase_orders",
+								"writeBehavior": "insert",
+								"sqlWriterUseTableLock": false,
+								"tableOption": "autoCreate",
+								"disableMetricsCollection": false
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"mappings": [
+									{
+										"source": {
+											"path": "$['_id']['$oid']"
+										},
+										"sink": {
+											"name": "id",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"path": "$['vendor_id']['$oid']"
+										},
+										"sink": {
+											"name": "vendor_id",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"path": "$['order_id']['$oid']"
+										},
+										"sink": {
+											"name": "order_id",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"path": "$['order_date']['$date']['$numberLong']"
+										},
+										"sink": {
+											"name": "order_date",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"path": "$['delivery_date']['$date']['$numberLong']"
+										},
+										"sink": {
+											"name": "delivery_date",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"path": "$['status']"
+										},
+										"sink": {
+											"name": "status",
+											"type": "String"
+										}
+									}
+								],
+								"mapComplexValuesToString": true
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "DS_MONG_Inventory",
+								"type": "DatasetReference",
+								"parameters": {
+									"collection_name": "purchaseorders"
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "DS_SQL_Inventory",
+								"type": "DatasetReference",
+								"parameters": {
+									"schema_name": "raw",
+									"table_name": "purchase_orders"
+								}
+							}
+						]
+					},
+					{
+						"name": "ACT_MT_Copy_SalesOrders",
+						"description": "Copy SalesOrders from mongodb to sqldb ",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "ACT_MT_Copy_PurchaseOrders",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "MongoDbAtlasSource",
+								"batchSize": 100
+							},
+							"sink": {
+								"type": "AzureSqlSink",
+								"preCopyScript": "DROP TABLE IF EXISTS raw.sales_orders",
+								"writeBehavior": "insert",
+								"sqlWriterUseTableLock": false,
+								"tableOption": "autoCreate",
+								"disableMetricsCollection": false
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"mappings": [
+									{
+										"source": {
+											"path": "$['_id']['$oid']"
+										},
+										"sink": {
+											"name": "id",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"path": "$['customer_id']['$oid']"
+										},
+										"sink": {
+											"name": "customer_id",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"path": "$['order_id']['$oid']"
+										},
+										"sink": {
+											"name": "order_id",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"path": "$['order_date']['$date']['$numberLong']"
+										},
+										"sink": {
+											"name": "order_date",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"path": "$['delivery_date']['$date']['$numberLong']"
+										},
+										"sink": {
+											"name": "delivery_date",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"path": "$['status']"
+										},
+										"sink": {
+											"name": "status",
+											"type": "String"
+										}
+									}
+								],
+								"mapComplexValuesToString": true
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "DS_MONG_Inventory",
+								"type": "DatasetReference",
+								"parameters": {
+									"collection_name": "salesorders"
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "DS_SQL_Inventory",
+								"type": "DatasetReference",
+								"parameters": {
+									"schema_name": "raw",
+									"table_name": "sales_orders"
+								}
+							}
+						]
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "Task 1"
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-08-28T15:20:28Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/DS_MONG_Inventory')]",
+				"[concat(variables('factoryId'), '/datasets/DS_SQL_Inventory')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_ETL_Inventory')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "ETL Pipeline for Inventory Data",
+				"activities": [
+					{
+						"name": "ACT_GEN_EPIPE_InventoryCopy",
+						"description": "Copy Inventory Data from mongodb to sqldb",
+						"type": "ExecutePipeline",
+						"dependsOn": [],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "PL_COPY_DATA_MONG_Inventory_TO_DATE_SQL",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
+					},
+					{
+						"name": "ACT_GEN_EPIPE_InventoryClean",
+						"description": "Clean Inventory data",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "ACT_GEN_EPIPE_InventoryCopy",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "PL_TRAN_DF_InventoryClean",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
+					},
+					{
+						"name": "ACT_GEN_EPIPE_InventoryReport",
+						"description": "Create Inventory report",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "ACT_GEN_EPIPE_InventoryClean",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "PL_TRAN_DF_PurchaseSalesReport",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "Task 1"
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-08-28T15:20:31Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/PL_COPY_DATA_MONG_Inventory_TO_DATE_SQL')]",
+				"[concat(variables('factoryId'), '/pipelines/PL_TRAN_DF_InventoryClean')]",
+				"[concat(variables('factoryId'), '/pipelines/PL_TRAN_DF_PurchaseSalesReport')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_TRAN_DF_InventoryClean')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "Clean Inventory data",
+				"activities": [
+					{
+						"name": "ACT_MT_DF_InventoryClean",
+						"description": "Clean inventory data and store in prep schema",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "DF_TRAN_InventoryData",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"PurchaseOrdersSource": {
+										"schema_name": "raw",
+										"table_name": "purchase_orders"
+									},
+									"SalesOrderSource": {
+										"schema_name": "raw",
+										"table_name": "sales_orders"
+									},
+									"VendorsSource": {
+										"schema_name": "raw",
+										"table_name": "vendors"
+									},
+									"CustomerSource": {
+										"schema_name": "raw",
+										"table_name": "customers"
+									},
+									"ItemsSource": {
+										"schema_name": "raw",
+										"table_name": "items"
+									},
+									"OrdersSource": {
+										"schema_name": "raw",
+										"table_name": "orders"
+									},
+									"PurchaseOrdersSink": {
+										"schema_name": "prep",
+										"table_name": "purchase_orders"
+									},
+									"SalesOrdersSink": {
+										"schema_name": "prep",
+										"table_name": "sales_orders"
+									},
+									"VendorsSink": {
+										"schema_name": "prep",
+										"table_name": "vendors"
+									},
+									"CustomerSink": {
+										"schema_name": "prep",
+										"table_name": "customers"
+									},
+									"ItemsSink": {
+										"schema_name": "prep",
+										"table_name": "items"
+									},
+									"OrdersSink": {
+										"schema_name": "prep",
+										"table_name": "orders"
+									}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "Task 1"
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-08-28T15:20:28Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/DF_TRAN_InventoryData')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_TRAN_DF_PurchaseSalesReport')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "Create Inventory report",
+				"activities": [
+					{
+						"name": "ACT_MT_DF",
+						"description": "Create purchase order report and store in reporting schema",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "DF_TRAN_PurchaseAndSalesOrders",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"PurchaseOrders": {
+										"schema_name": "prep",
+										"table_name": "purchase_orders"
+									},
+									"Orders": {
+										"schema_name": "prep",
+										"table_name": "orders"
+									},
+									"SalesOrders": {
+										"schema_name": "prep",
+										"table_name": "sales_orders"
+									},
+									"PurchaseReport": {
+										"schema_name": "reporting",
+										"table_name": "purchase_report"
+									},
+									"SalesReport": {
+										"schema_name": "reporting",
+										"table_name": "sales_report"
+									}
+								},
+								"linkedServiceParameters": {
+									"SalesReport": {
+										"schemaLinkedService": {
+											"schema_name": "reporting",
+											"table_name": "sales_report"
+										}
+									}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "Task 1"
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-08-28T15:20:28Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/DF_TRAN_PurchaseAndSalesOrders')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_TRAN_DF_ProductClean')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "ACT_MT_DF_ProductsClean",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "DF_TRAN_ProductsData",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"ProductsSource": {
+										"schema_name": "raw",
+										"table_name": "products"
+									},
+									"ProductsSink": {
+										"schema_name": "prep",
+										"table_name": "products"
+									}
+								},
+								"linkedServiceParameters": {}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "Task 2"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/DF_TRAN_ProductsData')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_MONG_Inventory')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_MONG_Inventory",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"collection_name": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "Task 1"
+				},
+				"annotations": [],
+				"type": "MongoDbAtlasCollection",
+				"schema": [],
+				"typeProperties": {
+					"collection": {
+						"value": "@dataset().collection_name",
+						"type": "Expression"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/LS_MONG_Inventory')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_SQL_Inventory')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_SQL_Inventory",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"schema_name": {
+						"type": "String"
+					},
+					"table_name": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "Task 1"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [],
+				"typeProperties": {
+					"schema": {
+						"value": "@dataset().schema_name",
+						"type": "Expression"
+					},
+					"table": {
+						"value": "@dataset().table_name",
+						"type": "Expression"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/LS_SQL_Inventory')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_ABLB_Misumi')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_ABLB_Misumi",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "Task 2"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": "products_data.csv",
+						"container": "misumi"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "products",
+						"type": "String"
+					},
+					{
+						"name": "categories",
+						"type": "String"
+					},
+					{
+						"name": "sub_categories",
+						"type": "String"
+					},
+					{
+						"name": "department_code",
+						"type": "String"
+					},
+					{
+						"name": "category_code",
+						"type": "String"
+					},
+					{
+						"name": "category_name",
+						"type": "String"
+					},
+					{
+						"name": "brand_code",
+						"type": "String"
+					},
+					{
+						"name": "series_name",
+						"type": "String"
+					},
+					{
+						"name": "min_standard_unit_price",
+						"type": "String"
+					},
+					{
+						"name": "max_standard_unit_price",
+						"type": "String"
+					},
+					{
+						"name": "min_days_to_ship",
+						"type": "String"
+					},
+					{
+						"name": "max_days_to_ship",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/LS_ABLB_Misumi')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/LS_ABLB_Misumi')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobStorage",
+				"typeProperties": {
+					"connectionString": "[parameters('LS_ABLB_Misumi_connectionString')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/LS_MONG_Inventory')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "MongoDbAtlas",
+				"typeProperties": {
+					"connectionString": "[parameters('LS_MONG_Inventory_connectionString')]",
+					"database": "[parameters('LS_MONG_Inventory_properties_typeProperties_database')]",
+					"driverVersion": "v2"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/LS_SQL_Inventory')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureSqlDatabase",
+				"typeProperties": {
+					"server": "[parameters('LS_SQL_Inventory_properties_typeProperties_server')]",
+					"database": "[parameters('LS_SQL_Inventory_properties_typeProperties_database')]",
+					"encrypt": "mandatory",
+					"trustServerCertificate": false,
+					"authenticationType": "SQL",
+					"userName": "[parameters('LS_SQL_Inventory_properties_typeProperties_userName')]",
+					"password": {
+						"type": "SecureString",
+						"value": "[parameters('LS_SQL_Inventory_password')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DF_TRAN_InventoryData')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "Task 1"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "DS_SQL_Inventory",
+								"type": "DatasetReference"
+							},
+							"name": "PurchaseOrdersSource"
+						},
+						{
+							"dataset": {
+								"referenceName": "DS_SQL_Inventory",
+								"type": "DatasetReference"
+							},
+							"name": "SalesOrderSource"
+						},
+						{
+							"dataset": {
+								"referenceName": "DS_SQL_Inventory",
+								"type": "DatasetReference"
+							},
+							"name": "VendorsSource"
+						},
+						{
+							"dataset": {
+								"referenceName": "DS_SQL_Inventory",
+								"type": "DatasetReference"
+							},
+							"name": "CustomerSource"
+						},
+						{
+							"dataset": {
+								"referenceName": "DS_SQL_Inventory",
+								"type": "DatasetReference"
+							},
+							"name": "ItemsSource"
+						},
+						{
+							"dataset": {
+								"referenceName": "DS_SQL_Inventory",
+								"type": "DatasetReference"
+							},
+							"name": "OrdersSource"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "DS_SQL_Inventory",
+								"type": "DatasetReference"
+							},
+							"name": "PurchaseOrdersSink"
+						},
+						{
+							"dataset": {
+								"referenceName": "DS_SQL_Inventory",
+								"type": "DatasetReference"
+							},
+							"name": "SalesOrdersSink"
+						},
+						{
+							"dataset": {
+								"referenceName": "DS_SQL_Inventory",
+								"type": "DatasetReference"
+							},
+							"name": "VendorsSink"
+						},
+						{
+							"dataset": {
+								"referenceName": "DS_SQL_Inventory",
+								"type": "DatasetReference"
+							},
+							"name": "CustomerSink"
+						},
+						{
+							"dataset": {
+								"referenceName": "DS_SQL_Inventory",
+								"type": "DatasetReference"
+							},
+							"name": "ItemsSink"
+						},
+						{
+							"dataset": {
+								"referenceName": "DS_SQL_Inventory",
+								"type": "DatasetReference"
+							},
+							"name": "OrdersSink"
+						}
+					],
+					"transformations": [
+						{
+							"name": "CleanPurchase"
+						},
+						{
+							"name": "CleanSales"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          id as string,",
+						"          vendor_id as string,",
+						"          order_id as string,",
+						"          order_date as string,",
+						"          delivery_date as string,",
+						"          status as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> PurchaseOrdersSource",
+						"source(output(",
+						"          id as string,",
+						"          customer_id as string,",
+						"          order_id as string,",
+						"          order_date as string,",
+						"          delivery_date as string,",
+						"          status as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> SalesOrderSource",
+						"source(output(",
+						"          id as string,",
+						"          name as string,",
+						"          contact_person as string,",
+						"          phone as string,",
+						"          email as string,",
+						"          address as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> VendorsSource",
+						"source(output(",
+						"          id as string,",
+						"          name as string,",
+						"          email as string,",
+						"          phone as string,",
+						"          address as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> CustomerSource",
+						"source(output(",
+						"          id as string,",
+						"          name as string,",
+						"          description as string,",
+						"          category as string,",
+						"          cost_price as double,",
+						"          selling_price as double,",
+						"          quantity as long,",
+						"          vendor_id as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> ItemsSource",
+						"source(output(",
+						"          id as string,",
+						"          item_id as string,",
+						"          price as long,",
+						"          quantity as long",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> OrdersSource",
+						"PurchaseOrdersSource derive(order_date = toDate(toTimestamp(toInteger(toLong(order_date) / toLong(1000))*1000l)),",
+						"          delivery_date = toDate(toTimestamp(toInteger(toLong(delivery_date) / toLong(1000))*1000l))) ~> CleanPurchase",
+						"SalesOrderSource derive(order_date = toDate(toTimestamp(toInteger(toLong(order_date) / toLong(1000))*1000l)),",
+						"          delivery_date = toDate(toTimestamp(toInteger(toLong(delivery_date) / toLong(1000))*1000l))) ~> CleanSales",
+						"CleanPurchase sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     recreate:true,",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> PurchaseOrdersSink",
+						"CleanSales sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     recreate:true,",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> SalesOrdersSink",
+						"VendorsSource sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     recreate:true,",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> VendorsSink",
+						"CustomerSource sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     recreate:true,",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> CustomerSink",
+						"ItemsSource sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     recreate:true,",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> ItemsSink",
+						"OrdersSource sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     recreate:true,",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> OrdersSink"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/DS_SQL_Inventory')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DF_TRAN_PurchaseAndSalesOrders')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "Task 1"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "DS_SQL_Inventory",
+								"type": "DatasetReference"
+							},
+							"name": "PurchaseOrders",
+							"description": "Import data from Purchase Orders"
+						},
+						{
+							"dataset": {
+								"referenceName": "DS_SQL_Inventory",
+								"type": "DatasetReference"
+							},
+							"name": "Orders",
+							"description": "Import data from Orders"
+						},
+						{
+							"dataset": {
+								"referenceName": "DS_SQL_Inventory",
+								"type": "DatasetReference"
+							},
+							"name": "SalesOrders"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "DS_SQL_Inventory",
+								"type": "DatasetReference"
+							},
+							"name": "PurchaseReport",
+							"description": "Sink report to reporting schema"
+						},
+						{
+							"dataset": {
+								"referenceName": "DS_SQL_Inventory",
+								"type": "DatasetReference"
+							},
+							"name": "SalesReport"
+						}
+					],
+					"transformations": [
+						{
+							"name": "PurchaseOrdersJoin",
+							"description": "Inner join on 'PurchaseSelect' and 'Orders'\nusing order_id in purchase and orders"
+						},
+						{
+							"name": "TotalPurchases",
+							"description": "Finding total purchase sales and quantities"
+						},
+						{
+							"name": "PurchaseSelect",
+							"description": "Select required columns"
+						},
+						{
+							"name": "PurchaseReportSelect",
+							"description": "Select required columns"
+						},
+						{
+							"name": "select1"
+						},
+						{
+							"name": "SalesOrderJoin",
+							"description": "Inner join on 'PurchaseSelect' and 'Orders'\nusing order_id in purchase and orders"
+						},
+						{
+							"name": "TotalSales",
+							"description": "Finding total sales and quantities"
+						},
+						{
+							"name": "SalesReportSelect",
+							"description": "Select required columns"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          id as string,",
+						"          vendor_id as string,",
+						"          order_id as string,",
+						"          order_date as date,",
+						"          delivery_date as date,",
+						"          status as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> PurchaseOrders",
+						"source(output(",
+						"          id as string,",
+						"          item_id as string,",
+						"          price as long,",
+						"          quantity as long",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> Orders",
+						"source(output(",
+						"          id as string,",
+						"          customer_id as string,",
+						"          order_id as string,",
+						"          order_date as date,",
+						"          delivery_date as date,",
+						"          status as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> SalesOrders",
+						"PurchaseSelect, Orders join(order_id == id,",
+						"     joinType:'inner',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> PurchaseOrdersJoin",
+						"PurchaseOrdersJoin window(over(item_id),",
+						"     total_purchase_price_per_item = sum(price),",
+						"          total_purchase_quantity_per_item = sum(quantity)) ~> TotalPurchases",
+						"PurchaseOrders select(mapColumn(",
+						"          purchase_id = id,",
+						"          vendor_id,",
+						"          order_id",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> PurchaseSelect",
+						"TotalPurchases select(mapColumn(",
+						"          item_id,",
+						"          vendor_id,",
+						"          order_id,",
+						"          total_purchase_price_per_vendor = total_purchase_price_per_item,",
+						"          total_purchase_quantity_per_vendor = total_purchase_quantity_per_item",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> PurchaseReportSelect",
+						"SalesOrders select(mapColumn(",
+						"          id,",
+						"          customer_id,",
+						"          order_id",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> select1",
+						"select1, Orders join(order_id == Orders@id,",
+						"     joinType:'inner',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> SalesOrderJoin",
+						"SalesOrderJoin window(over(item_id),",
+						"     total_sales_price_per_item = sum(price),",
+						"          total_sales_quantity_per_item = sum(quantity)) ~> TotalSales",
+						"TotalSales select(mapColumn(",
+						"          item_id,",
+						"          order_id,",
+						"          customer_id,",
+						"          total_sales_price_per_item,",
+						"          total_sales_quantity_per_item",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> SalesReportSelect",
+						"PurchaseReportSelect sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     recreate:true,",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> PurchaseReport",
+						"SalesReportSelect sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> SalesReport"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/DS_SQL_Inventory')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DF_TRAN_ProductsData')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "Task 2"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "DS_SQL_Misumi",
+								"type": "DatasetReference"
+							},
+							"name": "ProductsSource"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "DS_SQL_Inventory",
+								"type": "DatasetReference"
+							},
+							"name": "ProductsSink"
+						}
+					],
+					"transformations": [
+						{
+							"name": "ProductClean",
+							"description": "Clean min and max prices"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          series_code as string,",
+						"          products as string,",
+						"          categories as string,",
+						"          sub_categories as string,",
+						"          department_code as string,",
+						"          category_code as string,",
+						"          category_name as string,",
+						"          brand_code as string,",
+						"          series_name as string,",
+						"          min_standard_unit_price as double,",
+						"          max_standard_unit_price as double,",
+						"          min_days_to_ship as integer,",
+						"          max_days_to_ship as integer",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> ProductsSource",
+						"ProductsSource derive(min_standard_unit_price = iifNull(min_standard_unit_price, 0, min_standard_unit_price),",
+						"          max_standard_unit_price = iifNull(max_standard_unit_price, 0, max_standard_unit_price)) ~> ProductClean",
+						"ProductClean sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> ProductsSink"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/DS_SQL_Misumi')]",
+				"[concat(variables('factoryId'), '/datasets/DS_SQL_Inventory')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/LS_SQL_Misumi')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureSqlDatabase",
+				"typeProperties": {
+					"server": "[parameters('LS_SQL_Misumi_properties_typeProperties_server')]",
+					"database": "[parameters('LS_SQL_Misumi_properties_typeProperties_database')]",
+					"encrypt": "mandatory",
+					"trustServerCertificate": false,
+					"authenticationType": "SQL",
+					"userName": "[parameters('LS_SQL_Misumi_properties_typeProperties_userName')]",
+					"password": {
+						"type": "SecureString",
+						"value": "[parameters('LS_SQL_Misumi_password')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_SQL_Misumi')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_SQL_Misumi",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"schema_name": {
+						"type": "String"
+					},
+					"table_name": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "Task 2"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [],
+				"typeProperties": {
+					"schema": {
+						"value": "@dataset().schema_name",
+						"type": "Expression"
+					},
+					"table": {
+						"value": "@dataset().table_name",
+						"type": "Expression"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/LS_SQL_Misumi')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DF_TRAN_ProductDimensions')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "Task 2"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "DS_SQL_Misumi",
+								"type": "DatasetReference"
+							},
+							"name": "ProductSource"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "DS_SQL_Misumi",
+								"type": "DatasetReference"
+							},
+							"name": "DepartmentSink"
+						},
+						{
+							"dataset": {
+								"referenceName": "DS_SQL_Misumi",
+								"type": "DatasetReference"
+							},
+							"name": "CategorySink"
+						},
+						{
+							"dataset": {
+								"referenceName": "DS_SQL_Misumi",
+								"type": "DatasetReference"
+							},
+							"name": "SeriesSink"
+						}
+					],
+					"transformations": [
+						{
+							"name": "select1"
+						},
+						{
+							"name": "aggregate2"
+						},
+						{
+							"name": "window1"
+						},
+						{
+							"name": "select2"
+						},
+						{
+							"name": "select3"
+						},
+						{
+							"name": "aggregate3"
+						},
+						{
+							"name": "select4"
+						},
+						{
+							"name": "select5"
+						},
+						{
+							"name": "aggregate4"
+						},
+						{
+							"name": "select6"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          products as string,",
+						"          categories as string,",
+						"          sub_categories as string,",
+						"          department_code as string,",
+						"          category_code as string,",
+						"          category_name as string,",
+						"          brand_code as string,",
+						"          series_name as string,",
+						"          min_standard_unit_price as double,",
+						"          max_standard_unit_price as double,",
+						"          min_days_to_ship as integer,",
+						"          max_days_to_ship as integer,",
+						"          series_code as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> ProductSource",
+						"ProductSource select(mapColumn(",
+						"          department_code",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> select1",
+						"select1 aggregate(groupBy(department_code),",
+						"     count_of_dept = count(department_code)) ~> aggregate2",
+						"aggregate2 window(over(department_code),",
+						"     asc(count_of_dept, true),",
+						"     id = rowNumber()) ~> window1",
+						"window1 select(mapColumn(",
+						"          id,",
+						"          department_code",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> select2",
+						"ProductSource select(mapColumn(",
+						"          category_code,",
+						"          category_name",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> select3",
+						"select3 aggregate(groupBy(category_code,",
+						"          category_name),",
+						"     count_of_category = count(category_code)) ~> aggregate3",
+						"aggregate3 select(mapColumn(",
+						"          category_code,",
+						"          category_name",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> select4",
+						"ProductSource select(mapColumn(",
+						"          products,",
+						"          categories,",
+						"          sub_categories,",
+						"          department_code,",
+						"          category_code,",
+						"          category_name,",
+						"          brand_code,",
+						"          series_name,",
+						"          min_standard_unit_price,",
+						"          max_standard_unit_price,",
+						"          min_days_to_ship,",
+						"          max_days_to_ship,",
+						"          series_code",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> select5",
+						"select5 aggregate(groupBy(series_code,",
+						"          series_name),",
+						"     count_of_series = count(series_code)) ~> aggregate4",
+						"aggregate4 select(mapColumn(",
+						"          series_code,",
+						"          series_name",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> select6",
+						"select2 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     recreate:true,",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> DepartmentSink",
+						"select4 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     recreate:true,",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> CategorySink",
+						"select6 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     recreate:true,",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> SeriesSink"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/DS_SQL_Misumi')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_TRAN_DF_ProductDimensions')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "ACT_MT_DF_ProductsDimensions",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "DF_TRAN_ProductDimensions",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"ProductSource": {
+										"schema_name": "prep",
+										"table_name": "products"
+									},
+									"DepartmentSink": {
+										"schema_name": "dim",
+										"table_name": "departments"
+									},
+									"CategorySink": {
+										"schema_name": "dim",
+										"table_name": "categories"
+									},
+									"SeriesSink": {
+										"schema_name": "dim",
+										"table_name": "series"
+									}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "Task 2"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/DF_TRAN_ProductDimensions')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_COPY_DATA_ABLB_Products_TO_DATA_SQL_Products')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "ACT_MT_Copy_Products",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "DelimitedTextSource",
+								"storeSettings": {
+									"type": "AzureBlobStorageReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "DelimitedTextReadSettings"
+								}
+							},
+							"sink": {
+								"type": "AzureSqlSink",
+								"preCopyScript": "DROP TABLE IF EXISTS [raw].[products]",
+								"writeBehavior": "insert",
+								"sqlWriterUseTableLock": false,
+								"tableOption": "autoCreate",
+								"disableMetricsCollection": false
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "DS_ABLB_Misumi",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "DS_SQL_Misumi",
+								"type": "DatasetReference",
+								"parameters": {
+									"schema_name": "raw",
+									"table_name": "products"
+								}
+							}
+						]
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "Task 2"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/DS_ABLB_Misumi')]",
+				"[concat(variables('factoryId'), '/datasets/DS_SQL_Misumi')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_ETL_Products')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "ACT_GEN_EPIPE_ProductCopy",
+						"type": "ExecutePipeline",
+						"dependsOn": [],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "PL_COPY_DATA_ABLB_Products_TO_DATA_SQL_Products",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
+					},
+					{
+						"name": "ACT_GEN_EPIPE_ProductClean",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "ACT_GEN_EPIPE_ProductCopy",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "PL_TRAN_DF_ProductClean",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
+					},
+					{
+						"name": "ACT_GEN_EPIPE_ProductDimensions",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "ACT_GEN_EPIPE_ProductClean",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "PL_TRAN_DF_ProductDimensions",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "Task 2"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/PL_COPY_DATA_ABLB_Products_TO_DATA_SQL_Products')]",
+				"[concat(variables('factoryId'), '/pipelines/PL_TRAN_DF_ProductClean')]",
+				"[concat(variables('factoryId'), '/pipelines/PL_TRAN_DF_ProductDimensions')]"
+			]
+		}
+	]
+}

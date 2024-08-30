@@ -1,0 +1,48 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"value": "adf-miniproject-prod"
+		},
+		"LS_ABLB_Misumi_connectionString": {
+			"value": ""
+		},
+		"LS_MONG_Inventory_connectionString": {
+			"value": ""
+		},
+		"LS_SQL_Inventory_password": {
+			"value": ""
+		},
+		"LS_SQL_Misumi_password": {
+			"value": ""
+		},
+		"LS_MONG_Inventory_properties_typeProperties_database": {
+			"value": "Inventory"
+		},
+		"LS_SQL_Inventory_properties_typeProperties_server": {
+			"value": "sqlserverminiproject.database.windows.net"
+		},
+		"LS_SQL_Inventory_properties_typeProperties_database": {
+			"value": "sql-Inventory-dev"
+		},
+		"LS_SQL_Inventory_properties_typeProperties_userName": {
+			"value": "vishal"
+		},
+		"LS_SQL_Misumi_properties_typeProperties_server": {
+			"value": "sqlserverminiproject.database.windows.net"
+		},
+		"LS_SQL_Misumi_properties_typeProperties_database": {
+			"value": "sql-misumi-dev"
+		},
+		"LS_SQL_Misumi_properties_typeProperties_userName": {
+			"value": "vishal"
+		},
+		"containerUri": {
+			"value": ""
+		},
+		"containerSasToken": {
+			"value": ""
+		}
+	}
+}

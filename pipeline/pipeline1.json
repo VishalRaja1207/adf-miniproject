@@ -5,7 +5,16 @@
 			{
 				"name": "Data flow1",
 				"type": "ExecuteDataFlow",
-				"dependsOn": [],
+				"state": "Inactive",
+				"onInactiveMarkAs": "Succeeded",
+				"dependsOn": [
+					{
+						"activity": "Copy data1",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
 				"policy": {
 					"timeout": "0.12:00:00",
 					"retry": 0,
@@ -31,6 +40,211 @@
 					},
 					"traceLevel": "Fine"
 				}
+			},
+			{
+				"name": "Copy data1",
+				"type": "Copy",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "DelimitedTextSource",
+						"storeSettings": {
+							"type": "AzureBlobStorageReadSettings",
+							"recursive": true,
+							"enablePartitionDiscovery": false
+						},
+						"formatSettings": {
+							"type": "DelimitedTextReadSettings"
+						}
+					},
+					"sink": {
+						"type": "AzureSqlSink",
+						"preCopyScript": "DROP TABLE IF EXISTS raw.products",
+						"writeBehavior": "insert",
+						"sqlWriterUseTableLock": false,
+						"tableOption": "autoCreate",
+						"disableMetricsCollection": false
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"mappings": [
+							{
+								"source": {
+									"name": "products",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "products",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "categories",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "categories",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "sub_categories",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "sub_categories",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "department_code",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "department_code",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "category_code",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "category_code",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "category_name",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "category_name",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "brand_code",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "brand_code",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "series_name",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "series_name",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "min_standard_unit_price",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "min_standard_unit_price",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "max_standard_unit_price",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "max_standard_unit_price",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "min_days_to_ship",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "min_days_to_ship",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "max_days_to_ship",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "max_days_to_ship",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							}
+						],
+						"typeConversion": true,
+						"typeConversionSettings": {
+							"allowDataTruncation": true,
+							"treatBooleanAsNumber": false
+						}
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "LS_ABLB_Misumi",
+						"type": "DatasetReference"
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "DS_SQL_Misumi",
+						"type": "DatasetReference",
+						"parameters": {
+							"schema_name": "raw",
+							"table_name": "products"
+						}
+					}
+				]
 			}
 		],
 		"folder": {

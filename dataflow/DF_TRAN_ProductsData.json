@@ -1,5 +1,5 @@
 {
-	"name": "dataflow1",
+	"name": "DF_TRAN_ProductsData",
 	"properties": {
 		"folder": {
 			"name": "Task 2"
@@ -32,6 +32,7 @@
 			],
 			"scriptLines": [
 				"source(output(",
+				"          series_code as string,",
 				"          products as string,",
 				"          categories as string,",
 				"          sub_categories as string,",

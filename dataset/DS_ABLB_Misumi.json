@@ -1,5 +1,5 @@
 {
-	"name": "LS_ABLB_Misumi",
+	"name": "DS_ABLB_Misumi",
 	"properties": {
 		"linkedServiceName": {
 			"referenceName": "LS_ABLB_Misumi",

@@ -18,7 +18,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"dataflow": {
-						"referenceName": "DF_CLEAN_InventoryData",
+						"referenceName": "DF_TRAN_InventoryData",
 						"type": "DataFlowReference",
 						"datasetParameters": {
 							"PurchaseOrdersSource": {

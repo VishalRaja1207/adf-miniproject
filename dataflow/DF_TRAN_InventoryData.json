@@ -1,5 +1,5 @@
 {
-	"name": "DF_CLEAN_InventoryData",
+	"name": "DF_TRAN_InventoryData",
 	"properties": {
 		"folder": {
 			"name": "Task 1"

@@ -1,5 +1,5 @@
 {
-	"name": "dataflow2",
+	"name": "DF_TRAN_ProductDimensions",
 	"properties": {
 		"folder": {
 			"name": "Task 2"
@@ -15,13 +15,171 @@
 					"name": "ProductSource"
 				}
 			],
-			"sinks": [],
-			"transformations": [],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "DS_SQL_Misumi",
+						"type": "DatasetReference"
+					},
+					"name": "DepartmentSink"
+				},
+				{
+					"dataset": {
+						"referenceName": "DS_SQL_Misumi",
+						"type": "DatasetReference"
+					},
+					"name": "CategorySink"
+				},
+				{
+					"dataset": {
+						"referenceName": "DS_SQL_Misumi",
+						"type": "DatasetReference"
+					},
+					"name": "SeriesSink"
+				}
+			],
+			"transformations": [
+				{
+					"name": "select1"
+				},
+				{
+					"name": "aggregate2"
+				},
+				{
+					"name": "window1"
+				},
+				{
+					"name": "select2"
+				},
+				{
+					"name": "select3"
+				},
+				{
+					"name": "aggregate3"
+				},
+				{
+					"name": "select4"
+				},
+				{
+					"name": "select5"
+				},
+				{
+					"name": "aggregate4"
+				},
+				{
+					"name": "select6"
+				}
+			],
 			"scriptLines": [
-				"source(allowSchemaDrift: true,",
+				"source(output(",
+				"          products as string,",
+				"          categories as string,",
+				"          sub_categories as string,",
+				"          department_code as string,",
+				"          category_code as string,",
+				"          category_name as string,",
+				"          brand_code as string,",
+				"          series_name as string,",
+				"          min_standard_unit_price as double,",
+				"          max_standard_unit_price as double,",
+				"          min_days_to_ship as integer,",
+				"          max_days_to_ship as integer,",
+				"          series_code as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     isolationLevel: 'READ_UNCOMMITTED',",
-				"     format: 'table') ~> ProductSource"
+				"     format: 'table') ~> ProductSource",
+				"ProductSource select(mapColumn(",
+				"          department_code",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> select1",
+				"select1 aggregate(groupBy(department_code),",
+				"     count_of_dept = count(department_code)) ~> aggregate2",
+				"aggregate2 window(over(department_code),",
+				"     asc(count_of_dept, true),",
+				"     id = rowNumber()) ~> window1",
+				"window1 select(mapColumn(",
+				"          id,",
+				"          department_code",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> select2",
+				"ProductSource select(mapColumn(",
+				"          category_code,",
+				"          category_name",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> select3",
+				"select3 aggregate(groupBy(category_code,",
+				"          category_name),",
+				"     count_of_category = count(category_code)) ~> aggregate3",
+				"aggregate3 select(mapColumn(",
+				"          category_code,",
+				"          category_name",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> select4",
+				"ProductSource select(mapColumn(",
+				"          products,",
+				"          categories,",
+				"          sub_categories,",
+				"          department_code,",
+				"          category_code,",
+				"          category_name,",
+				"          brand_code,",
+				"          series_name,",
+				"          min_standard_unit_price,",
+				"          max_standard_unit_price,",
+				"          min_days_to_ship,",
+				"          max_days_to_ship,",
+				"          series_code",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> select5",
+				"select5 aggregate(groupBy(series_code,",
+				"          series_name),",
+				"     count_of_series = count(series_code)) ~> aggregate4",
+				"aggregate4 select(mapColumn(",
+				"          series_code,",
+				"          series_name",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> select6",
+				"select2 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     recreate:true,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> DepartmentSink",
+				"select4 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     recreate:true,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> CategorySink",
+				"select6 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     recreate:true,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> SeriesSink"
 			]
 		}
 	}

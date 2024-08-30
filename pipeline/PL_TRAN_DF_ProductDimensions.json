@@ -1,9 +1,9 @@
 {
-	"name": "PL_TRAN_DF_ProductClean",
+	"name": "PL_TRAN_DF_ProductDimensions",
 	"properties": {
 		"activities": [
 			{
-				"name": "ACT_MT_DF_ProductsClean",
+				"name": "ACT_MT_DF_ProductsDimensions",
 				"type": "ExecuteDataFlow",
 				"dependsOn": [],
 				"policy": {
@@ -16,16 +16,24 @@
 				"userProperties": [],
 				"typeProperties": {
 					"dataflow": {
-						"referenceName": "DF_TRAN_ProductsData",
+						"referenceName": "DF_TRAN_ProductDimensions",
 						"type": "DataFlowReference",
 						"datasetParameters": {
-							"ProductsSource": {
-								"schema_name": "raw",
-								"table_name": "products"
-							},
-							"ProductsSink": {
+							"ProductSource": {
 								"schema_name": "prep",
 								"table_name": "products"
+							},
+							"DepartmentSink": {
+								"schema_name": "dim",
+								"table_name": "departments"
+							},
+							"CategorySink": {
+								"schema_name": "dim",
+								"table_name": "categories"
+							},
+							"SeriesSink": {
+								"schema_name": "dim",
+								"table_name": "series"
 							}
 						}
 					},

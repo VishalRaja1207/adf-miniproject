@@ -1,0 +1,28 @@
+{
+	"name": "dataflow2",
+	"properties": {
+		"folder": {
+			"name": "Task 2"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "DS_SQL_Misumi",
+						"type": "DatasetReference"
+					},
+					"name": "ProductSource"
+				}
+			],
+			"sinks": [],
+			"transformations": [],
+			"scriptLines": [
+				"source(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> ProductSource"
+			]
+		}
+	}
+}
